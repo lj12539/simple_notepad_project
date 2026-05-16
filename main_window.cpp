@@ -1,4 +1,5 @@
 #include "main_window.h"
+#include "notepad_exception.h"
 
 #include "ui_find_replace_dialog.h"
 #include "ui_word_frequency_dialog.h"
@@ -10,6 +11,7 @@
 #include <QFont>
 #include <QKeySequence>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QStatusBar>
 #include <QTextCharFormat>
 #include <QTextDocument>
@@ -198,14 +200,28 @@ void main_window::open_file()
     if (path.isEmpty()) {
         return;
     }
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return;
+
+    try {
+        QFile file(path);
+
+        if (!file.exists()) {
+            throw file_not_found_exception(path.toStdString());
+        }
+
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            throw file_read_exception(path.toStdString());
+        }
+
+        QTextStream in(&file);
+        editor->setPlainText(in.readAll());
+        file.close();
+
+        current_file = path;
+        update_title();
+
+    } catch (const notepad_exception& ex) {
+        QMessageBox::critical(this, "Error", QString::fromStdString(ex.what()));
     }
-    QTextStream in(&file);
-    editor->setPlainText(in.readAll());
-    current_file = path;
-    update_title();
 }
 
 void main_window::save_file()
@@ -214,14 +230,22 @@ void main_window::save_file()
         save_file_as();
         return;
     }
-    QFile file(current_file);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        return;
-    }
-    QTextStream out(&file);
-    out << editor->toPlainText();
-}
 
+    try {
+        QFile file(current_file);
+
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            throw file_write_exception(current_file.toStdString());
+        }
+
+        QTextStream out(&file);
+        out << editor->toPlainText();
+        file.close();
+
+    } catch (const notepad_exception& ex) {
+        QMessageBox::critical(this, "Error", QString::fromStdString(ex.what()));
+    }
+}
 void main_window::save_file_as()
 {
     const auto path = QFileDialog::getSaveFileName(this, "Save File As");

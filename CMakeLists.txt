@@ -15,6 +15,7 @@ qt_add_executable(
     text_transform.h
     find_replace_dialog.ui
     word_frequency_dialog.ui
+        notepad_exception.h
 )
 target_link_libraries(notepad PRIVATE Qt6::Widgets)
 
@@ -22,6 +23,7 @@ add_executable(
     test_sort
     test_sort.cpp
     sort.h
+        notepad_exception.h
 )
 add_custom_command(TARGET notepad POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

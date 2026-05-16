@@ -2,9 +2,10 @@
 #define MAIN_WINDOW_H
 
 #include "text_transform.h"
-
+#include "notepad_exception.h"
 #include <QDialog>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QString>
 #include <QTextDocument>
 #include <QTextEdit>
