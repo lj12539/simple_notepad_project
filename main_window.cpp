@@ -248,34 +248,40 @@ void main_window::apply_transform(const text_transform& transform) const
 
 void main_window::open_file()
 {
-    bool ok;
-    QString path = QInputDialog::getText(this, "Open File by Path", "Please enter the absolute file path:", QLineEdit::Normal, "/Users/mac/Desktop/test.txt", &ok);
+    QFileDialog dialog(this, "Open File");
+    dialog.setFileMode(QFileDialog::ExistingFile);
 
-    if (!ok || path.isEmpty()) {
-        return;
-    }
+    dialog.setOption(QFileDialog::DontConfirmOverwrite, true);
 
-    try {
-        QFile file(path);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString path = dialog.selectedFiles().isEmpty() ? "" : dialog.selectedFiles().first();
 
-        if (!file.exists()) {
-            throw file_not_found_exception(path.toStdString()); // 触发你的自定义异常
+        if (path.isEmpty()) {
+            return;
         }
 
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            throw file_read_exception(path.toStdString()); // 触发你的读取异常
+        try {
+            QFile file(path);
+
+            if (!file.exists()) {
+                throw file_not_found_exception(path.toStdString());
+            }
+
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                throw file_read_exception(path.toStdString());
+            }
+
+            QTextStream in(&file);
+            editor->setPlainText(in.readAll());
+            file.close();
+
+            current_file = path;
+            update_title();
+
+        } catch (const notepad_exception& ex) {
+            QMessageBox::critical(this, "Error", QString("Failed to operate file!\n\nReason: %1")
+                                                 .arg(QString::fromStdString(ex.what())));
         }
-
-        QTextStream in(&file);
-        editor->setPlainText(in.readAll());
-        file.close();
-
-        current_file = path;
-        update_title();
-
-    } catch (const notepad_exception& ex) {
-        QMessageBox::critical(this, "Error", QString("Failed to operate file!\n\nReason: %1")
-                                             .arg(QString::fromStdString(ex.what())));
     }
 }
 
