@@ -7,9 +7,11 @@
 #include "ui_word_frequency_dialog.h"
 #include <QAction>
 #include <QApplication>
+#include <QColorDialog>
 #include <QDialog>
 #include <QFile>
 #include <QFileDialog>
+#include <QFontDialog>
 #include <QFont>
 #include <QKeySequence>
 #include <QMenuBar>
@@ -43,6 +45,7 @@ main_window::main_window()
     setup_format_toolbar();
     setup_search_menu();
     setup_tools_menu();
+    setup_view_menu();
 
     connect(editor, &QTextEdit::textChanged, this, [this] {
         QString text = editor->toPlainText();
@@ -58,7 +61,6 @@ main_window::main_window()
 
     connect(editor, &QTextEdit::customContextMenuRequested, this, [this](const QPoint& pos) {
         QMenu* menu = editor->createStandardContextMenu(pos);
-
         QTextCursor cursor = editor->cursorForPosition(pos);
 
         cursor.select(QTextCursor::WordUnderCursor);
@@ -172,6 +174,14 @@ void main_window::setup_format_menu()
             apply_transform(*transform);
         });
     }
+
+    format_menu->addSeparator();
+
+    auto* action_font = format_menu->addAction("Font...");
+    connect(action_font, &QAction::triggered, this, &main_window::select_font);
+
+    auto* action_color = format_menu->addAction("Text Color...");
+    connect(action_color, &QAction::triggered, this, &main_window::select_text_color);
 }
 
 void main_window::setup_format_toolbar()
@@ -492,4 +502,51 @@ void main_window::show_word_frequency_dialog()
     table->horizontalHeaderItem(1)->setTextAlignment(Qt::AlignRight);
 
     word_frequency_dlg->exec();
+}
+
+void main_window::select_font()
+{
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok, editor->font(), this);
+
+    if (ok) {
+        if (editor->textCursor().hasSelection()) {
+            QTextCharFormat fmt;
+            fmt.setFont(font);
+            editor->mergeCurrentCharFormat(fmt);
+        } else {
+            editor->setFont(font);
+        }
+    }
+}
+
+void main_window::select_text_color()
+{
+    QColor color = QColorDialog::getColor(Qt::black, this, "Select Text Color");
+
+    if (color.isValid()) {
+        QTextCharFormat fmt;
+        fmt.setForeground(color);
+        editor->mergeCurrentCharFormat(fmt);
+    }
+}
+
+void main_window::setup_view_menu()
+{
+    auto* view_menu = menuBar()->addMenu("View");
+
+    auto* action_zoom_in = view_menu->addAction("Zoom In");
+
+    action_zoom_in->setShortcut( QKeySequence("Ctrl++"));
+
+    connect(action_zoom_in, &QAction::triggered, this, [this] {
+        editor->zoomIn(1);
+    });
+
+    auto* action_zoom_out = view_menu->addAction("Zoom Out");
+    action_zoom_out->setShortcut(QKeySequence("Ctrl+-"));
+
+    connect(action_zoom_out, &QAction::triggered, this, [this] {
+        editor->zoomOut(1);
+    });
 }

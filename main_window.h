@@ -31,6 +31,10 @@ private:
     void setup_format_toolbar();
     void setup_search_menu();
     void setup_tools_menu();
+    void setup_view_menu();
+
+    void select_font();
+    void select_text_color();
 
     void open_file();
     void save_file();
