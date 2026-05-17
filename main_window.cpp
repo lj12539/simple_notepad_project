@@ -251,6 +251,8 @@ void main_window::open_file()
     QFileDialog dialog(this, "Open File");
     dialog.setFileMode(QFileDialog::ExistingFile);
 
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+
     dialog.setOption(QFileDialog::DontConfirmOverwrite, true);
 
     if (dialog.exec() == QDialog::Accepted) {
@@ -264,7 +266,7 @@ void main_window::open_file()
             QFile file(path);
 
             if (!file.exists()) {
-                throw file_not_found_exception(path.toStdString());
+                throw file_not_found_exception(path.toStdString()); // 🌟 乱填路径在这里无处遁形！
             }
 
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
