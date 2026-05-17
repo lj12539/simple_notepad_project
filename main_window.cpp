@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QColorDialog>
 #include <QDialog>
+#include <QInputDialog>
 #include <QFile>
 #include <QFileDialog>
 #include <QFontDialog>
@@ -247,8 +248,10 @@ void main_window::apply_transform(const text_transform& transform) const
 
 void main_window::open_file()
 {
-    const auto path = QFileDialog::getOpenFileName(this, "Open File");
-    if (path.isEmpty()) {
+    bool ok;
+    QString path = QInputDialog::getText(this, "Open File by Path", "Please enter the absolute file path:", QLineEdit::Normal, "/Users/mac/Desktop/test.txt", &ok);
+
+    if (!ok || path.isEmpty()) {
         return;
     }
 
@@ -256,11 +259,11 @@ void main_window::open_file()
         QFile file(path);
 
         if (!file.exists()) {
-            throw file_not_found_exception(path.toStdString());
+            throw file_not_found_exception(path.toStdString()); // 触发你的自定义异常
         }
 
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            throw file_read_exception(path.toStdString());
+            throw file_read_exception(path.toStdString()); // 触发你的读取异常
         }
 
         QTextStream in(&file);
@@ -271,7 +274,8 @@ void main_window::open_file()
         update_title();
 
     } catch (const notepad_exception& ex) {
-        QMessageBox::critical(this, "Error", QString::fromStdString(ex.what()));
+        QMessageBox::critical(this, "Error", QString("Failed to operate file!\n\nReason: %1")
+                                             .arg(QString::fromStdString(ex.what())));
     }
 }
 
