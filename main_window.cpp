@@ -1,5 +1,7 @@
 #include "main_window.h"
 #include "notepad_exception.h"
+#include "spell_checker.h"
+#include "spell_checker_highlighter.h"
 
 #include "ui_find_replace_dialog.h"
 #include "ui_word_frequency_dialog.h"
@@ -26,6 +28,9 @@ main_window::main_window()
     editor = new QTextEdit(this);
     setCentralWidget(editor);
 
+    checker = std::make_unique<spell_checker>("data/words.txt");
+    highlighter = new spell_checker_highlighter(editor->document(), *checker);
+
     transforms.push_back(std::make_unique<uppercase_transform>());
     transforms.push_back(std::make_unique<lowercase_transform>());
     transforms.push_back(std::make_unique<capitalized_transform>());
@@ -47,6 +52,42 @@ main_window::main_window()
         int line_count = text.isEmpty() ? 0 : text.count('\n') + 1;
 
         statusBar()->showMessage(QString("Words: %1  Lines: %2").arg(word_count).arg(line_count));
+    });
+
+    editor->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(editor, &QTextEdit::customContextMenuRequested, this, [this](const QPoint& pos) {
+        QMenu* menu = editor->createStandardContextMenu(pos);
+
+        QTextCursor cursor = editor->cursorForPosition(pos);
+
+        cursor.select(QTextCursor::WordUnderCursor);
+        QString selected_word = cursor.selectedText();
+
+        if (!selected_word.isEmpty() && !checker->is_correct(selected_word.toStdString())) {
+            auto suggestions = checker->get_suggestions(selected_word.toStdString());
+
+            if (!suggestions.empty()) {
+                QAction* first_action = menu->actions().isEmpty() ? nullptr : menu->actions().first();
+
+                QMenu* suggest_menu = new QMenu("Spelling Suggestions", menu);
+
+                for (const auto& word : suggestions) {
+                    QString q_word = QString::fromStdString(word);
+                    QAction* suggest_action = suggest_menu->addAction(q_word);
+
+                    connect(suggest_action, &QAction::triggered, this, [this, cursor, q_word]() mutable {
+                        cursor.insertText(q_word);
+                    });
+                }
+
+                menu->insertMenu(first_action, suggest_menu);
+                menu->insertSeparator(first_action);
+            }
+        }
+
+        menu->exec(editor->mapToGlobal(pos));
+        delete menu;
     });
 }
 
@@ -331,6 +372,13 @@ void main_window::setup_tools_menu()
     auto* word_frequency = tool_menu->addAction("Word Frequency");
     connect(word_frequency, &QAction::triggered, this, [this] {
         show_word_frequency_dialog();
+    });
+
+    auto* check_spelling_action = tool_menu->addAction("Check Spelling...");
+    connect(check_spelling_action, &QAction::triggered, this, [this] {
+        if (highlighter) {
+            highlighter->rehighlight();
+        }
     });
 }
 

@@ -1,6 +1,8 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
+#include "spell_checker.h"
+#include "spell_checker_highlighter.h"
 #include "text_transform.h"
 #include "notepad_exception.h"
 #include <QDialog>
@@ -54,6 +56,9 @@ private:
 
     QDialog* word_frequency_dlg { nullptr };
     std::unique_ptr<Ui::word_frequency_dialog> word_frequency_ui;
+
+    std::unique_ptr<spell_checker> checker;
+    spell_checker_highlighter* highlighter = nullptr;
 };
 
 #endif // MAIN_WINDOW_H
