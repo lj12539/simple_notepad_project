@@ -8,10 +8,10 @@
 
 class spell_checker_highlighter : public QSyntaxHighlighter {
     Q_OBJECT
+
 public:
-    spell_checker_highlighter(QTextDocument* parent, const spell_checker& checker)
-        : QSyntaxHighlighter(parent), m_checker(checker)
-    {
+    spell_checker_highlighter(QTextDocument *parent, const spell_checker &checker)
+        : QSyntaxHighlighter(parent), m_checker(checker) {
         m_error_format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
         m_error_format.setUnderlineColor(Qt::red);
     }
@@ -34,7 +34,7 @@ protected:
     }
 
 private:
-    const spell_checker& m_checker;
+    const spell_checker &m_checker;
     QTextCharFormat m_error_format;
 };
 

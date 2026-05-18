@@ -6,7 +6,7 @@
 
 class notepad_exception : public std::runtime_error {
 public:
-    explicit notepad_exception(const std::string& message)
+    explicit notepad_exception(const std::string & message)
         : std::runtime_error(message)
     {
     }
