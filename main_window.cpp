@@ -258,11 +258,11 @@ void main_window::open_file()
         QFile file(path);
 
         if (!file.exists()) {
-            throw file_not_found_exception(path.toStdString()); // 触发自定义异常
+            throw file_not_found_exception(path.toStdString());
         }
 
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            throw file_read_exception(path.toStdString()); // 触发读取异常
+            throw file_read_exception(path.toStdString());
         }
 
         QTextStream in(&file);
@@ -277,7 +277,6 @@ void main_window::open_file()
                                              .arg(QString::fromStdString(ex.what())));
     }
 }
-
 void main_window::save_file()
 {
     if (current_file.isEmpty()) {
