@@ -513,21 +513,35 @@ void main_window::select_text_color() {
     }
 }
 
-void main_window::setup_view_menu() {
-    auto *view_menu = menuBar()->addMenu("View");
+void main_window::setup_view_menu()
+{
+    auto* view_menu = menuBar()->addMenu("View");
 
-    auto *action_zoom_in = view_menu->addAction("Zoom In");
-
+    auto* action_zoom_in = view_menu->addAction("Zoom In");
     action_zoom_in->setShortcut(QKeySequence("Ctrl++"));
-
     connect(action_zoom_in, &QAction::triggered, this, [this] {
         editor->zoomIn(1);
     });
 
-    auto *action_zoom_out = view_menu->addAction("Zoom Out");
+    auto* action_zoom_out = view_menu->addAction("Zoom Out");
     action_zoom_out->setShortcut(QKeySequence("Ctrl+-"));
-
     connect(action_zoom_out, &QAction::triggered, this, [this] {
         editor->zoomOut(1);
+    });
+
+    view_menu->addSeparator();
+
+    auto* action_reset_zoom = view_menu->addAction("Reset Zoom");
+    action_reset_zoom->setShortcut(QKeySequence("Ctrl+0"));
+    connect(action_reset_zoom, &QAction::triggered, this, [this] {
+        QFont font = editor->font();
+
+        font.setPointSize(12);
+
+        editor->setFont(font);
+
+        QTextCharFormat fmt;
+        fmt.setFontPointSize(12);
+        editor->mergeCurrentCharFormat(fmt);
     });
 }
